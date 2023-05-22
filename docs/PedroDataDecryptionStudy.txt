@@ -1,0 +1,346 @@
+== First Looks ==
+(byte position: 00010203040506070809101112131415161718192021222324252627282930313233343536373839)
+                7e26ffafc41f151b1a1516a6ec161073102d0c470b68080a1d05012206b0000368673c3f3e39937e
+                7e26ffafc4faf0fefff0f34309f3f596f5c8e9a2ee8dedeff8e0e4c7e355e5e68d82d9dadbdc257e
+
+Message type = 0xc4
+
+0x1f = 0001 1111  0x15 = 0001 0101  0x1b = 0001 1011 ... 0x08 = 0000 1000 ... 0x00 = 0000 0000
+0xfa = 1111 1010  0xf0 = 1111 0000  0xfe = 1111 1110 ... 0xed = 1110 1101 ... 0xe5 = 1110 0101
+
+0x15 XOR 0x08 = 0xed
+0x15 XOR 0x00 = 0x15 XOR 0xf0 = 0xe5
+
+Byte 5 = "encryption" byte?
+0x1f (first 0xC4 packet)
+0xfa (second 0xC4 packet)
+
+Byte 6 (Current Hour?)
+0x1f XOR 0x15 = 0x0a
+0xfa XOR 0xf0 = 0x0a
+
+Byte 7 (Current Minute?)
+0x1f XOR 0x1b = 0x04
+0xfa XOR 0xfe = 0x04
+
+Byte 8 (Current Day of Week bit 7,6,5 and day of month bits 4,3,2,1,0 ?)
+0x1f XOR 0x1a = 0x05
+0xfa XOR 0xff = 0x05
+
+Byte 9 (Current Month ?)
+0x1f XOR 0x15 = 0x0a
+0xfa XOR 0xf0 = 0x0a
+
+Byte 10 (Current Year since 2000 ?)
+0x1f XOR 0x16 = 0x09
+0xfa XOR 0xf3 = 0x09
+
+Byte 11 (Filter mode ?)
+0x1f XOR 0xa6 = 0xb9
+0xfa XOR 0x43 = 0xb9
+
+Byte 12 (Error code ?)
+0x1f XOR 0xec = 0xf3
+0xfa XOR 0x09 = 0xf3
+
+Byte 13 (Actual Temperature ?)
+0x1f XOR 0x16 = 0x09
+0xfa XOR 0xf3 = 0x09
+
+Byte 14 (Don't Care ?)
+0x1f XOR 0x10 = 0x0f
+0xfa XOR 0xf5 = 0x0f
+
+Byte 15 (Setpoint Temp ?)
+0x1f XOR 0x73 = 0x6c (108)
+0xfa XOR 0x96 = 0x6c (108)
+
+== LED Status packet (type = 0xCA) ==
+(byte position: 000102030405060708091011121314151617181920212223242526272829303132333435)
+key=35 packet:  7e22ffafca357675747b7a79787f7e7d7c63626160676665646b6a69696f6e6d6c53347e
+key=83 packet:  7e22ffafca83c0c3c2cdcccfcec9c8cbcad5d4d7d6d1d0d3d2dddcdfdfd9d8dbdae54b7e
+(LEDs on solid blue)
+key=83 packet:  7e22ffafca833fc380cd33cf8ccbc8cbcbd5d4d7d6d1d0d3d2dddcdfdfd9d8dbdae5b27e
+
+                                vv brightness?
+                                   vv red?
+                                     vv green?
+                                       vv blue?
+(byte position: 000102030405060708 09101112 13141516 17181920 21222324 25262728 29303132 33)
+Typical unencrypted:        000000 00000000 ff006400 0000ff00 00000000 00000000 00000000 00  (all LEDs off)
+Encrypted bytes (key=0x35): 767574 7b7a7978 7f7e7d7c 63626160 67666564 6b6a6969 6f6e6d6c 53
+XORed with 0x35:            434041 4e4f4c4d 4a4b4849 56575455 52535051 5e5f5c5c 5a5b5859 66
+
+Encrypted bytes (key=0x83): c0c3c2 cdcccfce c9c8cbca d5d4d7d6 d1d0d3d2 dddcdfdf d9d8dbda e5
+XORed with 0x83:            434041 4e4f4c4d 4a4b4849 56575455 52535051 5e5f5c5c 5a5b5859 66
+
+LED blue=ON encrypted:      3fc380 cd33cf8c cbc8cbcb d5d4d7d6 d1d0d3d2 dddcdfdf d9d8dbda e5
+XORed with 0x83:            bc4003 4eb04c0f 484b4848 56575455 52535051 5e5f5c5c 5a5b5859 66
+Loop counter-1 (hex):       1a1918 17161514 13121110 0f0e0d0c 0b0a0908 07060504 03020100 3f
+(R XOR Key) XOR LC-1:       a6591b 59a6591b 5b595958 59595959 59595959 59595958 59595959 59
+
+From https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp/blob/master/pybalboa/sundanceRS485.py
+        self.lightBrightnes = data[1]
+        self.lightMode = data[4]
+        self.lightB = data[2]
+        self.lightG = data[6]
+        self.lightR = data[8]    
+        self.lightCycleTime= data[9] 
+        self.lightUnknown1 = data[0]
+        self.lightUnknown3 = data[3]
+        self.lightUnknown4 = data[5]
+        self.lightUnknown7 = data[7]
+        self.lightUnknown9 = data[9]
+                            vv Brightness
+                              vv Blue?
+                                   vv Mode
+                                       vv Green?
+                                            vv Red?
+(R V Key) V (LC-1) V 59:    ff0042 00ff0042 02000001 00000000 00000000 00000001 00000000 00 (blue ON)
+               7e22ffafca83 ff0042 00ff0042 02000001 00000000 00000000 00000001 00000000 00 b27e
+(R V key) V (LC-1) V 59:    000000 00000000 00000000 00000000 00000000 00000001 00000000 00 (all LEDs off)
+                                vv brightness
+                                   vv red
+                                     vv green
+                                       vv blue
+Typical unencrypted:        000000 00000000 ff006400 0000ff00 00000000 00000000 00000000 00 (all LEDs off)
+
+Encrypted diff:             4a4e4e 52535656 4a4a4e4e 72727676 6a6a6e6e 72727676 6a6a6e6e 92
+
+Loop counter (dec):         272625 24232221 20191817 16151413 12111009 08070605 04030201 00
+Loop counter (hex):         1b1a19 18171615 14131211 100f0e0d 0c0b0a09 08070605 04030201 00
+Loop counter-1 (hex):       1a1918 17161514 13121110 0f0e0d0c 0b0a0908 07060504 03020100 3f
+
+Loop counter-1 start=0x43:  434241 403f3e3d 3c3b3a39 38373635 34333231 302f2e2d 2c2b2a29 28
+
+(LC = Loop counter)
+(R XOR Key) XOR LC:         585A58 56585A58 5E585A58 46585a58 5e585a58 56585a59 5e585a58 66
+(R XOR Key) XOR LC-1:       595959 59595959 59595959 59595959 59595959 59595958 59595959 59
+
+(V = XOR)
+(R V LC-1) V (35 V 59):     000000 00000000 00000000 00000000 00000000 00000001 00000000 00
+(R V LC-1) V (83 V 59):     000000 00000000 00000000 00000000 00000000 00000001 00000000 00
+(R V LCstart43):            000200 0e707270 
+
+35 V 59 = 6C = 0110 1100
+0xCA = 1100 1010
+0x59 = 0101 1001
+!(0x59) = 1010 0110 = 0xA6
+
+== Panel Status packet (type = 0xC4) ==
+(byte position: 000102030405060708 09101112 13141516 17181920 21222324 25262728 29303132 33343536 37 3839)
+                7e26ffafc41f151b1a 1516a6ec 16107310 2d0c470b 68080a1d 05012206 b0000368 673c3f3e 39 937e
+                7e26ffafc4faf0feff f0f34309 f3f596f5 c8e9a2ee 8dedeff8 e0e4c7e3 55e5e68d 82d9dadb dc 257e
+
+                            vv Hour
+                              vv Minute
+                                vv Day of week and day of month
+                                   vv Month (05)
+                                     vv Year since 2000 (17)
+                                         vv Error code (00)
+Typ unencrypted:7e25ffaf16  133a1c 08161200 5dfa5000 00008200 005d0206 000a8000 008d0000 00ff0000 00 d87e
+
+Balboa fields:              HmF1CT HhMmF2Xx XxXxF3F4 PpXxCpLf MbXxXxXx XxStXxXx Xx
+Typical Balboa:             000064 082d0000 01000004 00000000 00000000 00640000 00
+Encrypted bytes (key=0x1f): 151b1a 1516a6ec 16107310 2d0c470b 68080a1d 05012206 b0000368 673c3f3e 39
+XORed with 0x1f:            0a0405 0a09b9f3 090f6c0f 32135814 77171502 1a1e3d19 af1f1c77 78232021 26
+Encrypted bytes (key=0xfa): f0feff f0f34309 f3f596f5 c8e9a2ee 8dedeff8 e0e4c7e3 55e5e68d 82d9dadb dc
+XORed with 0xfa:            0a0405 0a09b9f3 090f6c0f 32135814 77171502 1a1e3d19 af1f1c77 78232021 26
+
+Loop counter-1 (hex):       1e1d1c 1b1a1918 17161514 13121110 0f0e0d0c 0b0a0908 07060504 03020100 3f
+Loop counter (offset):      f9f8f7 f6f5f4f3 f2f1f0ef eeedeceb eae9e8e7 e6e5e4e3 e2e1e0df dedddcdb da
+Loop counter start 0x1a:    1a1918 17161514 13121110 0f0e0d0c 0b0a0908 07060504 03020100 3f3e3d3c 3b
+Loop counter start 0x13:    131211 100f0e0d 0c0b0a09 08070605 04030201 003f3e3d 3c3b3a39 38373635 34
+
+(R V Key) V LC=0x1a:        101d1d 1d1face7 1a1d7d1f
+(R V Key) V (LC=0x1a)V0x08: 181515 1517a4ef 
+
+(R V Key) V LC=0x13:        191614 1a06b7fe
+(R V Key) V (LC=0x13)V0x11: 080705 0b17a6ef
+
+0x0a = 0000 1010 => 0x05 = 0000 0101 V 0000 1111 = 0x0f
+0x09 = 0000 1001 => 0x17 = 0001 0111 v 0001 1110 = 0x1e
+0x0b = 0000 1011
+0x17 = 0001 0111
+
+Decrypted bytes (LC-1):     141919 1113a0eb 1e19791b 21014904 7819180e 11143411 a8191973 7b212121 06
+Decrypted bytes (LC-1)V21:  353838 303281ca 3f38583a 00206825 5938392f 30351530 89383852 5a000000 27 
+Decrypted bytes (LC-1)-21:  fdf8f8 f0f27fca
+Decrypted bytes (LC-1)Veb:  fff2f2 
+Decrypted bytes (LC-1)V59:  4d4040 484af9b2 47402042 7858105d 21404157 484d6d48 f140402a 22787878 5f
+Decrypted bytes (offset):   f3fcf2 fcfc4d00 
+
+Decrypted bytes (LC):                    ea       1a 2600                           1a72 7c202220 26 
+
+0xCA = 1100 1010
+0x59 = 0101 1001 = 0xCA rotated right by 3 bits = 0xCA V 0x93
+
+0xC4 = 1100 0100
+0x19 = 0001 1001
+0x98 = 1001 1000 = 0xC4 rotated right by 3 bits
+0xC4 V 0x93 = 0x57
+
+(Balboa spas have hour and minute in bytes 8 & 9 instead of 5 & 6)
+                01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
+                ML MT MT MT HM F1 CT HH MM F2  X  X  X F3 F4 PP  X CP LF MB  X  X  X  X ST  X  X  X CB
+                1D FF AF 13  0  0 64  8 2D  0  0  1  0  0  4  0  0  0  0  0  0  0  0  0 64  0  0  0  6
+                            HmF1CT HhMmF2Xx XxXxF3F4 PpXxCpLf MbXxXxXx XxStXxXx Xx
+(R V Key) V LC-1:           141919 1113a0eb 1e19791b 21014904 7819180e 11143411 a8191973 7b212121 06
+(R V Key) V (LC-1) V 0x19:  0d0000 080ab9f2 07006002 3818501d 61000117 080d2d08 b100006a 62383838 1f
+(R V Key) V (LC-1) V 0x98:  8c8181 898b
+(R V Key) V (LC-1) V 0x57:  434e4e 4644
+(R V Key) V (LC-1) V 0x61:  757878 7072
+
+From May 9 data stream (for reference):
+(R V Key) V (LC-1) V 0x19:  0d0000 080ab9f2 07006002 3818501d 61000117 080d2d08 b100006a 62383838 1f
+
+DATE: 05/18/23 TIME:2:40PM, WS: 103, WT 102, Pump 1: OFF, Pump 2 OFF, LED: OFF, UV: ON
+Capture1 (C1):  7e26ffafc4a2aba6a7 a8ad0251 abadc8ad 90b122b6 d3b5b7a0 b8bc92bb 14bdbede e6818283 84 f07e
+(byte position: 000102030405060708 09101112 13141516 17181920 21222324 25262728 29303132 33343536 37 3839)
+C1 encrypted (key=0xa2):    aba6a7 a8ad0251 abadc8ad 90b122b6 d3b5b7a0 b8bc92bb 14bdbede e6818283 84
+(C1 V key):                 090405 0a0fa0f3 090f6a0f 32138014 71171502 1a1e3019 b61f1c7c 44232021 26
+C1 encrypted (key=0x18):    111c1d 1217b8eb 11177217 2a0b980c 690f0d1a 02062801 ae070464 5c3b3839 3e 
+(C1 V key):                 090405 0a0fa0f3 090f6a0f 32138014 71171502 1a1e3019 b61f1c7c 44232021 26
+
+Loop counter-1 (hex):       1e1d1c 1b1a1918 17161514 13121110 0f0e0d0c 0b0a0908 07060504 03020100 3f
+(C1 V key) V (LC-1):        171919 1115b9eb 1e197f1b 21019104 7e19180e 11143911 b1191978 47212121 19
+(C1 V key) V (LC-1) V 0x19: 0e0000 080ca0f2 07006602 3818881d 67000117 080d2008 a8000061 5e383838 00
+                            ^^HR                ^^WT          ^^WS  ^^YR?
+
+C4K = 0x19
+C1[-1] = 0x18
+K1 = 0x19 V 0x18 = C4K V C1[-1]
+LC = 0x1F = (packet_length - header_length - 2) = (0x26 - 0x05 - 0x02)
+
+C1[0] = 0x11
+C1[0] V 0x18 = 0x09
+C1[0] V 0x18 V 0x1e = 0x17
+C1[0] V 0x18 V 0x1e V 0x19 = 0x0e <== HR
+C1[0] V (0x18 V 0x19) V 0x1e = 0x0e
+C1[0] V K1 V 0x1e = 0x0e
+
+C1[1] = 0x1c
+C1[1] V 0x18 = 0x04
+C1[1] V 0x18 V 0x1d = 0x19
+C1[1] V 0x18 V 0x1d V 0x19 = 0x00
+C1[1] V (0x18 V 0x19) V 0x1d = 0x00
+0x1d = C1[1] V (0x18 V 0x19) V 0x00
+
+Decrypt algorithm:
+
+Find byte_count:
+  byte_count = (packet_length - header_length - 1)
+
+Find Key:
+  If message_type = 0xC4:
+    key = data[5] XOR 0x19
+  Else if message type = 0xCA:
+    key = data[5] XOR 0x59
+
+For each byte decrypt and save result:
+  data[byte_count] = data[byte_count] XOR key XOR ((byte_count-1) MOD 64)
+
+Calculate new checksum over entire packet and overwrite previous
+
+
+                            
+From https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp/blob/master/pybalboa/sundanceRS485.py
+(Divide byte positions by 2 since HyperActiveJ's decode algorithm combines 2 adjacent bytes into 1)
+        HOUR_FIELD = 0 #XOR 6 to get 24hour time
+        PUMP_FIELD_1 = 1 #Most bit data
+        DATE_FIELD_1 = 2 #Dont know how to use this yet...
+        UNKOWN_FIELD_3 = 3 #Always 145? MIght might be days untill water refresh, UV, or filter change
+        TBD_FIELD_4 = 4 #5 When Everything Off. 69 when clear ray / circ on?
+        TEMP_FIELD_1 = 5 #Devide by 2 if in C, otherwise F
+        HEAT_MODE_FIELD = 6 #
+        DATE_FIELD_2 = 7
+        SET_TEMP_FIELD = 8 #Devide by 2 if in C, otherwise F          
+        UNKOWN_FIELD_9 = 9 #Always 107? might be days untill water refresh, UV, or filter change  
+        HEATER_FIELD_1 = 10 #= 64 when Heat on        
+        MINUTE_FIELD = 11 #Ok as is      
+        UNKOWN_FIELD_12 = 12 #  Always 107? might be days untill water refresh, UV, or filter change           
+        DISPLAY_FIELD = 13        
+        TEMP_FEILD_2 = 14 #Appears to be 2nd temp sensor C  or F directly. Changes when pump is on!        
+
+        PUMP_2_BIT_SHIFT = 2 #b100 When pump running
+        PUMP_CIRC_BIT_SHIFT = 6 #b1000000 when pump running
+        MANUAL_CIRC = 7 #b11000000 Includeding Pump Running
+        AUTO_CIRC = 6 #b1100000 Includeding Pump Running
+        TBD_4_CIRC_SHIFT = 6 #Field 4 goes up by 64 when circ is running it seems
+        TEMP_FIELD_1_xor = 2 #need to Xor this field by 2 to get actual temperature for some reason
+        HEATER_SHIFT_1 = 6 #b1000000 when Heat on
+        DAY_SHIFT =  3 #Shift date field 2 by this amount to get day of month
+        MONTH_AND = 7  #Shift date field 2 by this to get Month of year
+        #YEAR Dont have a guess yet
+        HOUR_XOR = 6 #Need to xor the hour field with 6 to get actual hour
+
+Capture1 (C1):  7e26ffafc4a2aba6a7 a8ad0251 abadc8ad 90b122b6 d3b5b7a0 b8bc92bb 14bdbede e6818283 84 f07e
+(byte position: 000102030405060708 09101112 13141516 17181920 21222324 25262728 29303132 33343536 37 3839)
+C1 encrypted (key=0xa2):    aba6a7 a8ad0251 abadc8ad 90b122b6 d3b5b7a0 b8bc92bb 14bdbede e6818283 84
+C1[i] V C1[i+1] V 1:        080d04
+
+                            vv Hour
+                              vv Minute
+                                vv Day of week and day of month
+                                   vv Month (05)
+                                     vv Year since 2000 (17)
+                                         vv Error code (00)
+Typ unencrypted:7e25ffaf16  133a1c 08161200 5dfa5000 00008200 005d0206 000a8000 008d0000 00ff0000 00 d87e
+                                          WT^^  ^^WS
+
+== Algebra ==
++ = or
+* = and
+~ = not
+v = xor
+? = any given operation
+~? = complement of that operation
+
+X v X = 0 for any X
+
+U = unencrypted value
+E = encrypted value
+K = key value
+S = seed value
+L = loop counter value
+
+E = U v K v S v L
+E v K = U v K v S v L v K
+      = U v S v L v (K v K)
+      = U v S v L
+E v K v L v S = U
+(E v L) v (K v S) = U
+
+E = (U v L) ? (K v S)
+(E v L) ~? (K v S) = U
+
+(x V 35) ? 1b = 76
+(x ? 1b) V (35 ? 1b) = 76
+(x ? 1b) = 76 V (35 ? 1b)
+x = (76 V (35 ? 1b)) ~? 1b
+x = (76 ~? 1b) V ((35 ? 1b) ~? 1b)
+x = (76 ~? 1b) V 35
+x + y = ((76 ~? 1b) V 35)
+x = ((76 ~? 1b) V 35) - y
+x = ((76 ~? 1b) - y) V (35 -y)
+
+0x1b = 0001 1011
+
+0x35 = 0011 0101
+0x53 = 0101 0011
+0xc6 = 1100 0110
+
+0xc7 XOR 0x35 = 0xF2
+0xc6 XOR 0x35 = 0xf3
+0xc5 XOR 0x35 = 0xf0
+
+0x6b XOR 0x35 = 0x5e
+0x6c XOR 0x35 = 0x59
+0x6d XOR 0x35 = 0x58
+
+0x76 XOR 0x35 = 0x43
+0x67 XOR 0x35 = 0x52
+
+0x67 XOR 0x35 = 0x52
+
+0x6c XOR 0x53 = 0x3f
