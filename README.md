@@ -10,3 +10,8 @@ python3 decrypt.py 7e26ffafc4eee7aaebe4e14e1de7a184e1dcfd6efa9ff9fbecf4f0ddf758f
 Of course you can also include the decryption script in your own Python code.
 
 The message strings should be complete message packets with everything, including the header and trailing "7e" bytes. Only messages of type C4 and CA will be decrypted; any others are returned unchanged.
+
+# Credits/References
+https://github.com/garbled1/pybalboa
+https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp/blob/master/pybalboa/sundanceRS485.py
+https://github.com/jackbrown1993/Jacuzzi-RS485
