@@ -69,6 +69,7 @@ if __name__ == "__main__":
 
     import sys # Only for access to command line parameters
 
+    # From https://github.com/garbled1/pybalboa
     def balboa_calc_cs(data, length):
         """ Calculate the checksum byte for a balboa message """
         crc = 0xB5
