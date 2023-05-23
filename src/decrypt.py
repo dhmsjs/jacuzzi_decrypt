@@ -41,6 +41,8 @@ def decrypt(packet: bytearray) -> bytearray:
         key1 = packet[5] ^ 0x19
     elif packet_type == 0xca:
         key1 = packet[5] ^ 0x59
+    elif packet_type == 0xcc:
+        key1 = packet[5] ^ 0xde
     else:
         # Done if not an encrypted message type
         return packet
@@ -69,7 +71,6 @@ if __name__ == "__main__":
 
     import sys # Only for access to command line parameters
 
-    # From https://github.com/garbled1/pybalboa
     def balboa_calc_cs(data, length):
         """ Calculate the checksum byte for a balboa message """
         crc = 0xB5
