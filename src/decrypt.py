@@ -20,11 +20,10 @@ def decrypt(packet: bytearray) -> bytearray:
     is used to form a constant value that is also XORed with each byte
     of the message data.  
 
-    As is typical with XOR cipher encryption, you would use the same
-    algorithm to both encrypt and decrypt the nessage. However in this
-    case only the C4 and CA type status messages coming from the controller
-    are encrypted, so there is no need for us to ever encrypt a message
-    we send to the controller.
+    As is typical with XOR cipher encryption, you the same algorithm will
+    both encrypt and decrypt a nessage. Thus you can also call decrypt()
+    to encrypt type CC command messages before sending them to the spa
+    controller.
 
     Typical encrypted C4 packet:
     byte #:    000102030405 060708 09101112 13141516 17181920 21222324 25262728 29303132 33343536 37 3839
@@ -53,6 +52,10 @@ def decrypt(packet: bytearray) -> bytearray:
     HEADER_LENGTH = 5
     packet_length = packet[1]
     key2 = packet_length - HEADER_LENGTH - 2
+
+    # Just in case the packet we were given is an immutable "bytes" array
+    # we will convert it to a (mutable) bytearray type.
+    packet = bytearray(packet)
 
     # Apply both keys to each encrypted value and save the decrypted result
     # back into the original packet.
@@ -93,14 +96,16 @@ if __name__ == "__main__":
     except:
         hextext = "7e26ffafc4a2aba6a7a8ad0251abadc8ad90b122b6d3b5b7a0b8bc92bb14bdbedee681828384f07e"
 
-    bytes = bytearray.fromhex(hextext)
-    print('   Packet: {}'.format(bytes.hex()))
-    bytes = decrypt(bytes)
-    print('Decrypted: {}'.format(bytes.hex()))
+    # Force the data to be an immutable array just for unit testing
+    data = bytes.fromhex(hextext)
+
+    print('   Packet: {}'.format(data.hex()))
+    data = decrypt(data)
+    print('Decrypted: {}'.format(data.hex()))
     
-    length = bytes[1]
-    checksum = balboa_calc_cs(bytes[1:length], length - 1)
-    if checksum == bytes[-2]:
+    length = data[1]
+    checksum = balboa_calc_cs(data[1:length], length - 1)
+    if checksum == data[-2]:
         print("Checksum okay")
     else:
         print("Bad checksum! (0x{:02x})".format(checksum))
