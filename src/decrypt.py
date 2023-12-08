@@ -41,7 +41,7 @@ def decrypt(packet: bytearray) -> bytearray:
     elif packet_type == 0xca:
         key1 = packet[5] ^ 0x59
     elif packet_type == 0xcc:
-        key1 = packet[5] ^ 0xde
+        key1 = packet[5] ^ 0xdf
     else:
         # Done if not an encrypted message type
         return packet
@@ -62,6 +62,10 @@ def decrypt(packet: bytearray) -> bytearray:
     for i in range(6, packet_length):
       key2 = (key2 - 1) % 64
       packet[i] = packet[i] ^ key1 ^ key2
+
+    # Force the "extra" encryption byte to zero just so packet checksums
+    # will only change when the actual packet data fields change.
+    packet[5] = 0
 
     # Calculate a new checksum over entire decrypted packet and save it as
     # the new packet checksum.
